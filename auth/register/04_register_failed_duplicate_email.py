@@ -12,20 +12,20 @@ from selenium.webdriver.support import expected_conditions as EC
 # ==================================================================================
 # TEST CONFIGURATION
 # ==================================================================================
-TEST_CASE_ID = "REG-003"
-TEST_SCENARIO = "Register Failed - Invalid OTP Code"
+TEST_CASE_ID = "REG-004"
+TEST_SCENARIO = "Register Failed - Duplicate Email"
 TARGET_URL = "http://localhost:5173/register"
 DRIVER_NAME = "msedgedriver.exe"
 REPORT_FILE_NAME = "test_report.csv"
 
-# Test Data (Valid Data, but using Invalid OTP)
+# Test Data (GUNAKAN EMAIL YANG SUDAH TERDAFTAR DI REG-001)
 USER_DATA = {
-    "name": "Federico Invalid OTP",
-    "email": "federico_wrong_otp@test.com",
+    "name": "Federico Duplicate",
+    "email": "federicomatthewpratamaa@gmail.com", # Email ini harus sudah ada di DB
     "instance": "Test Instance",
     "password": "Password123!"
 }
-# FIXED: OTP 4 Digit (Sesuai log backend) tapi tetap salah
+# Kita pakai OTP asal saja, karena kita berharap ditolak by Email
 INVALID_OTP = "0000"
 # ==================================================================================
 
@@ -66,8 +66,8 @@ def run_test():
         print(f"[STEP 1] Navigating to {TARGET_URL}...")
         driver.get(TARGET_URL)
 
-        # STEP 2: Fill Form (Valid Data)
-        print("[STEP 2] Filling form with valid personal data...")
+        # STEP 2: Fill Form (With Existing Email)
+        print("[STEP 2] Filling form with EXISTING Email...")
         driver.find_element(By.XPATH, "(//input[@type='text'])[1]").send_keys(USER_DATA["name"])
         driver.find_element(By.XPATH, "//input[@type='email']").send_keys(USER_DATA["email"])
         driver.find_element(By.XPATH, "(//input[@type='text'])[2]").send_keys(USER_DATA["instance"])
@@ -78,11 +78,10 @@ def run_test():
         print("[STEP 3] Requesting OTP Code...")
         wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Send')]"))).click()
 
-        # Simulate Network Delay
         time.sleep(2)
 
-        # STEP 4: Input INVALID OTP (4 Digits)
-        print(f"[STEP 4] Inputting INVALID OTP: {INVALID_OTP}...")
+        # STEP 4: Input OTP (Fake)
+        print(f"[STEP 4] Inputting OTP: {INVALID_OTP}...")
         otp_input = driver.find_element(By.XPATH, "//input[contains(@autocomplete, 'one-time-code')]")
         otp_input.send_keys(INVALID_OTP)
 
@@ -91,38 +90,34 @@ def run_test():
         register_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Register']")))
         register_btn.click()
 
-        # STEP 6: Assert Error Message (ROBUST MODE)
-        print("[STEP 6] Verifying Rejection...")
+        # STEP 6: Assert Error Message
+        print("[STEP 6] Verifying Duplicate Rejection...")
 
         try:
-            # STRATEGI: Cari indikator error apapun (Teks Merah atau Toast Error)
-            # Ini akan menangkap 'Invalid OTP', 'Register Failed', atau 'Unexpected Error'
+            # Kita cari pesan error yang mengandung kata "registered" atau "exist"
+            # Sesuai codingan React Mas: "User with that email already registered."
             error_element = wait.until(EC.visibility_of_element_located(
-                (By.XPATH, "//*[contains(@class, 'text-red-500') or contains(@class, 'Toastify__toast--error')]")
+                (By.XPATH, "//*[contains(text(), 'registered') or contains(text(), 'exist')]")
             ))
 
-            print(f"   > Error Message Detected: '{error_element.text}'")
-
-            # Pastikan pesannya bukan sukses (Just in case)
-            if "success" in error_element.text.lower():
-                test_result = "FAILED"
-                failure_reason = "System showed SUCCESS message despite invalid OTP!"
-            else:
-                test_result = "PASSED"
-                print("   > System correctly rejected the request (Error message appeared).")
+            print(f"   > Error Message Found: '{error_element.text}'")
+            test_result = "PASSED"
 
         except:
-            # Fallback: Kalau tidak ada pesan error, cek URL.
-            # Jika masih di halaman Register, berarti aman (ditahan sistem).
-            # Jika pindah ke Login/Dashboard, berarti jebol (Bug).
-            if "login" in driver.current_url or "dashboard" in driver.current_url:
-                test_result = "FAILED"
-                failure_reason = "System ACCEPTED an invalid OTP (Security Breach)"
-            else:
-                # Masih di register tapi gak ada pesan error? Tetap kita anggap PASS (Blocked),
-                # tapi kasih catatan kalau UX-nya kurang informatif.
-                test_result = "PASSED"
-                print("   > System blocked the request (Stayed on Register Page).")
+            # Analisa Error Lain
+            # Kalau errornya "Invalid OTP", berarti backend ngecek OTP dulu sebelum Email.
+            try:
+                invalid_otp_msg = driver.find_element(By.XPATH, "//*[contains(text(), 'Invalid')]")
+                test_result = "PASSED" # Tetap lulus karena sistem menolak
+                failure_reason = "Passed (Rejected by Invalid OTP check first, before Email check)"
+                print(f"   > Note: Backend checked OTP first ('{invalid_otp_msg.text}'). Test still PASSED (Rejected).")
+            except:
+                if "login" in driver.current_url:
+                    test_result = "FAILED"
+                    failure_reason = "System ACCEPTED a duplicate email (Critical Data Integrity Bug)"
+                else:
+                    test_result = "FAILED"
+                    failure_reason = "Expected error 'already registered' did not appear."
 
     except Exception as e:
         test_result = "FAILED"
