@@ -13,3 +13,6 @@ Date,Test Case ID,Scenario,Duration (s),Result,Failure Reason
 2025-12-23 23:20:28,DASHBOARD-001,Dashboard Render - Verify Sections (Live/Upcoming) & Search,1.30,PASSED,-
 2025-12-23 23:21:36,DASHBOARD-002,Search Functionality - Verify Filtering & Empty State,4.45,PASSED,-
 2025-12-23 23:22:41,DASHBOARD-003,Pagination Interaction - Rows Per Page & Next Button,3.35,PASSED,-
+2025-12-23 23:29:34,AUTH-FORGOT-001,Forgot Password Flow - Request OTP & UI Transitions,15.72,FAILED,Message: 
+2025-12-23 23:30:30,AUTH-FORGOT-002,Forgot Password - Empty Email Validation,0.63,PASSED,-
+2025-12-23 23:31:01,AUTH-FORGOT-003,Forgot Password - Unregistered Email,1.20,PASSED,-
