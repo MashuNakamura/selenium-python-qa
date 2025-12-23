@@ -1,0 +1,29 @@
+# 1. Virtual Environment (WAJIB IGNORE)
+# Isinya library Python yang bengkak, gak perlu diupload.
+venv/
+env/
+
+# 2. Python Cache
+# File sampah hasil compile otomatis Python
+__pycache__/
+*.pyc
+
+# 3. IDE Settings
+# Settingan editor VS Code / PyCharm biar gak bentrok sama user lain
+.vscode/
+.idea/
+
+# 4. Test Evidence (Opsional)
+# Biasanya screenshot error gak perlu diupload biar repo tetap bersih
+# Kalau mau diupload, hapus baris *.png ini
+*.png
+*.log
+
+# 5. System Files
+# Sampah dari Windows/Mac
+Thumbs.db
+.DS_Store
+
+# --- CATATAN ---
+# File .exe, .csv, .txt, dan folder auth/
+# TIDAK DITULIS di sini, jadi otomatis AKAN TER-UPLOAD (Aman).
