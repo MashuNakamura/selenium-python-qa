@@ -1,0 +1,3 @@
+Date,Test Case ID,Scenario,Duration (s),Result,Failure Reason
+2025-12-23 22:26:37,REG-001,User Registration with Valid Data (Success),9.99,PASSED,-
+2025-12-23 22:30:38,REG-002,Register Failed - Password Mismatch,1.30,PASSED,-
