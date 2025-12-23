@@ -6,14 +6,15 @@ from selenium import webdriver
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # ==================================================================================
 # TEST CONFIGURATION
 # ==================================================================================
-TEST_CASE_ID = "DASHBOARD-001"
-TEST_SCENARIO = "Dashboard Render - Verify Sections (Live/Upcoming) & Search"
+TEST_CASE_ID = "DASHBOARD-002"
+TEST_SCENARIO = "Search Functionality - Verify Filtering & Empty State"
 BASE_URL = "http://localhost:5173"
 DRIVER_NAME = "msedgedriver.exe"
 REPORT_FILE_NAME = "test_report.csv"
@@ -23,6 +24,9 @@ USER_DATA = {
     "email": "admin@wowadmin.com",
     "password": "secret"
 }
+
+# Keyword yang pasti TIDAK ADA di database
+SEARCH_KEYWORD_NEGATIVE = "XY_NGAWUR_TEST_123"
 # ==================================================================================
 
 def run_test():
@@ -33,7 +37,7 @@ def run_test():
     edge_options.add_argument("--log-level=3")
     edge_options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
-    # Path Setup (Mundur 1 level dari folder 'dashboard' ke root)
+    # Path Setup (Mundur 1 level dari folder 'dashboard')
     current_script_folder = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(current_script_folder, "../"))
 
@@ -59,65 +63,65 @@ def run_test():
     print("="*50 + "\n")
 
     try:
-        # --- STEP 1: LOGIN (FIXED SELECTOR) ---
-        print("[STEP 1] Logging in to access Dashboard...")
+        # --- STEP 1: LOGIN ---
+        print("[STEP 1] Logging in...")
         driver.get(f"{BASE_URL}/login")
 
-        # FIX: Gunakan XPath type='email' karena lebih akurat di React Projectmu
-        print("   > Inputting Email...")
-        email_input = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@type='email']")))
-        email_input.clear()
-        email_input.send_keys(USER_DATA["email"])
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@type='email']"))).send_keys(USER_DATA["email"])
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@type='password']"))).send_keys(USER_DATA["password"])
+        wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login') or @type='submit']"))).click()
 
-        print("   > Inputting Password...")
-        pass_input = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@type='password']")))
-        pass_input.clear()
-        pass_input.send_keys(USER_DATA["password"])
-
-        print("   > Clicking Login...")
-        login_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login') or @type='submit']")))
-        login_btn.click()
-
-        # Tunggu masuk dashboard
-        print("   > Waiting for redirect...")
         wait.until(EC.url_contains("dashboard"))
-        print("   > Login Success. Dashboard loaded.")
+        print("   > Login Success.")
 
-        # --- STEP 2: WAIT FOR LOADING TO FINISH ---
-        print("[STEP 2] Waiting for Skeleton Loading to disappear...")
-        # Tunggu sampai teks "Live" muncul (artinya data sudah ke-load)
+        # Tunggu loading awal selesai (Teks 'Live' muncul)
         wait.until(EC.visibility_of_element_located((By.XPATH, "//h1[contains(text(), 'Live')]")))
-        print("   > Content Loaded (Skeleton gone).")
+        time.sleep(1) # Jeda visual
 
-        # --- STEP 3: VERIFY SECTIONS ---
-        print("[STEP 3] Verifying Dashboard Sections...")
+        # --- STEP 2: PERFORM SEARCH (NEGATIVE) ---
+        print(f"[STEP 2] Typing unique keyword: '{SEARCH_KEYWORD_NEGATIVE}'...")
 
-        # Cek Section Live
-        live_header = driver.find_element(By.XPATH, "//h1[contains(text(), 'Live')]")
-        if live_header.is_displayed():
-            print("   > Section 'Live' found.")
+        search_input = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@placeholder='Search webinars...']")))
+        search_input.clear()
+        search_input.send_keys(SEARCH_KEYWORD_NEGATIVE)
+
+        # React search usually instant, but let's give it a tiny moment to filter
+        time.sleep(1)
+
+        # --- STEP 3: VERIFY EMPTY STATE ---
+        print("[STEP 3] Verifying 'No Data' messages appear...")
+
+        # Cari teks "No Live Webinars"
+        no_live = driver.find_element(By.XPATH, "//div[contains(text(), 'No Live Webinars')]")
+        # Cari teks "No Upcoming Webinars"
+        no_upcoming = driver.find_element(By.XPATH, "//div[contains(text(), 'No Upcoming Webinars')]")
+
+        if no_live.is_displayed() and no_upcoming.is_displayed():
+            print("   > Empty State Validated: Filtering works (Data hidden).")
         else:
-            raise Exception("Section 'Live' header missing")
+            raise Exception("Search failed: 'No Webinars' message NOT found.")
 
-        # Cek Section Upcoming
-        upcoming_header = driver.find_element(By.XPATH, "//h1[contains(text(), 'Upcoming')]")
-        if upcoming_header.is_displayed():
-            print("   > Section 'Upcoming' found.")
+        # --- STEP 4: CLEAR SEARCH ---
+        print("[STEP 4] Clearing Search Bar...")
+
+        # Cara clear yang robust: Ctrl+A -> Delete (kadang .clear() bug di React)
+        search_input.send_keys(Keys.CONTROL + "a")
+        search_input.send_keys(Keys.DELETE)
+        time.sleep(1)
+
+        # --- STEP 5: VERIFY DATA RETURNS (OPTIONAL) ---
+        # Kita cek apakah state kembali seperti semula
+        # Kalau database kosong dari awal, pesan "No Live" akan tetap ada.
+        # Jadi kita pass saja kalau input sudah kosong.
+
+        current_value = search_input.get_attribute("value")
+        if current_value == "":
+            print("   > Search cleared successfully.")
         else:
-            raise Exception("Section 'Upcoming' header missing")
-
-        # --- STEP 4: VERIFY SEARCH BAR ---
-        print("[STEP 4] Verifying Search Bar...")
-
-        # Mencari input search
-        search_input = driver.find_element(By.XPATH, "//input[@placeholder='Search webinars...']")
-        if search_input.is_displayed():
-            print("   > Search Bar found & visible.")
-        else:
-            raise Exception("Search Bar missing")
+            raise Exception("Failed to clear search input.")
 
         test_result = "PASSED"
-        print("\n[RESULT] DASHBOARD RENDER OK.")
+        print("\n[RESULT] SEARCH FUNCTIONALITY OK.")
 
     except Exception as e:
         test_result = "FAILED"

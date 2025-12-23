@@ -1,3 +1,15 @@
 Date,Test Case ID,Scenario,Duration (s),Result,Failure Reason
 2025-12-23 22:26:37,REG-001,User Registration with Valid Data (Success),9.99,PASSED,-
 2025-12-23 22:30:38,REG-002,Register Failed - Password Mismatch,1.30,PASSED,-
+2025-12-23 22:46:03,REG-003,Register Failed - Invalid OTP Code,3.50,PASSED,-
+2025-12-23 22:47:42,REG-004,Register Failed - Duplicate Email,3.52,PASSED,-
+2025-12-23 22:49:57,LOG-001,Login Success - Valid Admin Credentials,1.20,PASSED,-
+2025-12-23 22:52:28,LOG-002,Login Failed - Incorrect Password,1.24,PASSED,-
+2025-12-23 22:52:55,LOG-003,Login Failed - Unregistered Email,1.21,PASSED,-
+2025-12-23 22:54:06,LOG-004,Login Failed - Invalid Email Format,10.98,PASSED,-
+2025-12-23 22:54:30,LOG-005,Login Failed - Empty Fields,1.05,PASSED,-
+2025-12-23 23:08:49,LOGOUT-001,Logout Success - User Initiated,7.64,PASSED,-
+2025-12-23 23:14:05,ABOUT-001,Guest Access - Verify About Page Content,1.62,PASSED,-
+2025-12-23 23:20:28,DASHBOARD-001,Dashboard Render - Verify Sections (Live/Upcoming) & Search,1.30,PASSED,-
+2025-12-23 23:21:36,DASHBOARD-002,Search Functionality - Verify Filtering & Empty State,4.45,PASSED,-
+2025-12-23 23:22:41,DASHBOARD-003,Pagination Interaction - Rows Per Page & Next Button,3.35,PASSED,-

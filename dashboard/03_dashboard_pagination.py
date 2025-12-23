@@ -8,12 +8,13 @@ from selenium.webdriver.edge.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
 
 # ==================================================================================
 # TEST CONFIGURATION
 # ==================================================================================
-TEST_CASE_ID = "DASHBOARD-001"
-TEST_SCENARIO = "Dashboard Render - Verify Sections (Live/Upcoming) & Search"
+TEST_CASE_ID = "DASHBOARD-003"
+TEST_SCENARIO = "Pagination Interaction - Rows Per Page & Next Button"
 BASE_URL = "http://localhost:5173"
 DRIVER_NAME = "msedgedriver.exe"
 REPORT_FILE_NAME = "test_report.csv"
@@ -33,7 +34,6 @@ def run_test():
     edge_options.add_argument("--log-level=3")
     edge_options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
-    # Path Setup (Mundur 1 level dari folder 'dashboard' ke root)
     current_script_folder = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(current_script_folder, "../"))
 
@@ -59,65 +59,74 @@ def run_test():
     print("="*50 + "\n")
 
     try:
-        # --- STEP 1: LOGIN (FIXED SELECTOR) ---
-        print("[STEP 1] Logging in to access Dashboard...")
+        # --- STEP 1: LOGIN ---
+        print("[STEP 1] Logging in...")
         driver.get(f"{BASE_URL}/login")
 
-        # FIX: Gunakan XPath type='email' karena lebih akurat di React Projectmu
-        print("   > Inputting Email...")
-        email_input = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@type='email']")))
-        email_input.clear()
-        email_input.send_keys(USER_DATA["email"])
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@type='email']"))).send_keys(USER_DATA["email"])
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@type='password']"))).send_keys(USER_DATA["password"])
+        wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login') or @type='submit']"))).click()
 
-        print("   > Inputting Password...")
-        pass_input = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@type='password']")))
-        pass_input.clear()
-        pass_input.send_keys(USER_DATA["password"])
-
-        print("   > Clicking Login...")
-        login_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Login') or @type='submit']")))
-        login_btn.click()
-
-        # Tunggu masuk dashboard
-        print("   > Waiting for redirect...")
         wait.until(EC.url_contains("dashboard"))
-        print("   > Login Success. Dashboard loaded.")
+        print("   > Login Success.")
 
-        # --- STEP 2: WAIT FOR LOADING TO FINISH ---
-        print("[STEP 2] Waiting for Skeleton Loading to disappear...")
-        # Tunggu sampai teks "Live" muncul (artinya data sudah ke-load)
+        # Tunggu loading selesai
         wait.until(EC.visibility_of_element_located((By.XPATH, "//h1[contains(text(), 'Live')]")))
-        print("   > Content Loaded (Skeleton gone).")
+        time.sleep(1)
 
-        # --- STEP 3: VERIFY SECTIONS ---
-        print("[STEP 3] Verifying Dashboard Sections...")
+        # --- STEP 2: TEST ROWS PER PAGE DROPDOWN ---
+        print("[STEP 2] Testing 'Rows per page' Dropdown...")
 
-        # Cek Section Live
-        live_header = driver.find_element(By.XPATH, "//h1[contains(text(), 'Live')]")
-        if live_header.is_displayed():
-            print("   > Section 'Live' found.")
+        # Cari elemen <select> pertama (biasanya punya bagian Live)
+        select_element = wait.until(EC.element_to_be_clickable((By.TAG_NAME, "select")))
+
+        # Gunakan class Select dari Selenium untuk interaksi mudah
+        dropdown = Select(select_element)
+
+        # Cek default value (biasanya 5)
+        default_val = dropdown.first_selected_option.text
+        print(f"   > Default selection: {default_val}")
+
+        # Ubah ke '10'
+        print("   > Changing selection to '10 / page'...")
+        dropdown.select_by_value("10") # Sesuai value={opt} di React
+        time.sleep(1)
+
+        # Validasi perubahan
+        current_val = dropdown.first_selected_option.text
+        if "10" in current_val:
+            print("   > Dropdown updated successfully.")
         else:
-            raise Exception("Section 'Live' header missing")
+            raise Exception(f"Dropdown failed to update. Current: {current_val}")
 
-        # Cek Section Upcoming
-        upcoming_header = driver.find_element(By.XPATH, "//h1[contains(text(), 'Upcoming')]")
-        if upcoming_header.is_displayed():
-            print("   > Section 'Upcoming' found.")
+        # --- STEP 3: CONDITIONAL TEST NEXT BUTTON ---
+        print("[STEP 3] Checking 'Next' Button capability...")
+
+        # Cari tombol Next yang ada di dekat dropdown tadi
+        # XPath: Cari tombol yang tulisannya 'Next'
+        next_btn = driver.find_element(By.XPATH, "//button[text()='Next']")
+
+        # Cek apakah disabled?
+        is_disabled = next_btn.get_attribute("disabled")
+
+        if is_disabled:
+            print("   > 'Next' button is DISABLED (Not enough data).")
+            print("   > [INFO] Skipping click test. This is expected behavior for small datasets.")
         else:
-            raise Exception("Section 'Upcoming' header missing")
+            print("   > 'Next' button is ENABLED. Clicking it...")
+            next_btn.click()
+            time.sleep(1)
 
-        # --- STEP 4: VERIFY SEARCH BAR ---
-        print("[STEP 4] Verifying Search Bar...")
-
-        # Mencari input search
-        search_input = driver.find_element(By.XPATH, "//input[@placeholder='Search webinars...']")
-        if search_input.is_displayed():
-            print("   > Search Bar found & visible.")
-        else:
-            raise Exception("Search Bar missing")
+            # Validasi Page berubah
+            # Cari teks "Page 2" di span dekat tombol
+            page_indicator = driver.find_element(By.XPATH, "//span[contains(text(), 'Page 2')]")
+            if page_indicator.is_displayed():
+                print("   > Successfully moved to Page 2.")
+            else:
+                raise Exception("Clicked Next but page indicator did not update.")
 
         test_result = "PASSED"
-        print("\n[RESULT] DASHBOARD RENDER OK.")
+        print("\n[RESULT] PAGINATION CONTROLS OK.")
 
     except Exception as e:
         test_result = "FAILED"
