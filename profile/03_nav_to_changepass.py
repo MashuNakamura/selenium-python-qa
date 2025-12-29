@@ -9,16 +9,18 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+# ==================================================================================
+# TEST CONFIGURATION
+# ==================================================================================
 TEST_CASE_ID = "PROF-003"
-TEST_SCENARIO = "Change Password Flow - Update & Redirect"
+TEST_SCENARIO = "Profile - Navigate to Change Password Page"
 BASE_URL = "http://localhost:5173"
 DRIVER_NAME = "msedgedriver.exe"
 REPORT_FILE_NAME = "test_report.csv"
 
-# Current Credentials
-CURRENT_PASS = "secret"
-# New Credentials to Set
-NEW_PASS = "NewPass1!" # Memenuhi syarat strong password (Huruf besar, kecil, angka, simbol)
+# Credentials
+USER_DATA = { "email": "admin@wowadmin.com", "password": "secret" }
+# ==================================================================================
 
 def run_test():
     edge_options = Options()
@@ -48,57 +50,39 @@ def run_test():
 
     try:
         # 1. Login
-        print("[STEP 1] Login with current password...")
+        print("[STEP 1] Login...")
         driver.get(f"{BASE_URL}/login")
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@type='email']"))).send_keys("admin@wowadmin.com")
-        driver.find_element(By.XPATH, "//input[@type='password']").send_keys(CURRENT_PASS)
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@type='email']"))).send_keys(USER_DATA["email"])
+        driver.find_element(By.XPATH, "//input[@type='password']").send_keys(USER_DATA["password"])
         driver.find_element(By.XPATH, "//button[contains(text(), 'Login')]").click()
         wait.until(EC.url_contains("dashboard"))
 
-        # 2. Go to Profile & Click Change Password
-        print("[STEP 2] Going to Change Password Page...")
+        # 2. Go to Profile
+        print("[STEP 2] Going to Profile...")
         driver.get(f"{BASE_URL}/profile")
 
+        # 3. Klik Edit Profile DULU (FIX DISINI)
+        print("[STEP 3] Clicking 'Edit Profile' to enable buttons...")
+        edit_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Edit Profile')]")))
+        edit_btn.click()
+        time.sleep(1) # Tunggu state berubah
+
+        # 4. Klik Change Password
+        print("[STEP 4] Clicking 'Change Password'...")
         change_pass_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Change Password')]")))
         change_pass_btn.click()
 
-        # 3. Validasi URL
+        # 5. Validasi URL
+        print("[STEP 5] Validating Redirection...")
         wait.until(EC.url_contains("change-password"))
-        print("   > Landed on Change Password Page.")
+        current_url = driver.current_url
 
-        # 4. Input Form
-        print(f"[STEP 3] Changing password to '{NEW_PASS}'...")
-
-        # Input 1: Old Password
-        # Cari input berdasarkan label terdekat
-        old_pass_input = driver.find_element(By.XPATH, "//div[contains(@class, 'group')][.//label[contains(text(), 'Old Password')]]//input")
-        old_pass_input.send_keys(CURRENT_PASS)
-
-        # Input 2: New Password
-        new_pass_input = driver.find_element(By.XPATH, "//div[contains(@class, 'group')][.//label[contains(text(), 'New Password')]]//input")
-        new_pass_input.send_keys(NEW_PASS)
-
-        # Input 3: Confirm Password
-        confirm_pass_input = driver.find_element(By.XPATH, "//div[contains(@class, 'group')][.//label[contains(text(), 'Confirm New Password')]]//input")
-        confirm_pass_input.send_keys(NEW_PASS)
-
-        # 5. Submit
-        print("[STEP 4] Submitting form...")
-        # Cari tombol Change Password (hati-hati jangan ketukar sama judul H1)
-        submit_btn = driver.find_element(By.XPATH, "//button[@type='submit'][contains(text(), 'Change Password')]")
-        submit_btn.click()
-
-        # 6. Validasi Redirect ke Profile
-        print("[STEP 5] Waiting for redirect back to Profile...")
-        wait.until(EC.url_contains("profile"))
-
-        # Validasi Toast Success
-        success_toast = wait.until(EC.visibility_of_element_located((By.XPATH, "//div[contains(text(), 'Password changed successfully')]")))
-
-        if success_toast:
-            print("   > Password Change Success! Redirected to Profile.")
-            print(f"   > [IMPORTANT] Your Admin password is now: {NEW_PASS}")
+        if "change-password" in current_url:
+            print(f"   > Success! Landed on: {current_url}")
             test_result = "PASSED"
+        else:
+            test_result = "FAILED"
+            failure_reason = "URL did not contain 'change-password'"
 
     except Exception as e:
         test_result = "FAILED"

@@ -16,3 +16,10 @@ Date,Test Case ID,Scenario,Duration (s),Result,Failure Reason
 2025-12-23 23:29:34,AUTH-FORGOT-001,Forgot Password Flow - Request OTP & UI Transitions,15.72,FAILED,Message: 
 2025-12-23 23:30:30,AUTH-FORGOT-002,Forgot Password - Empty Email Validation,0.63,PASSED,-
 2025-12-23 23:31:01,AUTH-FORGOT-003,Forgot Password - Unregistered Email,1.20,PASSED,-
+2025-12-23 23:35:06,PROF-001,Edit Profile - Update Name & Instance (Success),3.76,PASSED,-
+2025-12-23 23:35:30,PROF-002,Edit Profile - Empty Name Validation (Fail),2.25,PASSED,-
+2025-12-23 23:57:33,PROF-003,Profile - Navigate to Change Password Page,2.58,PASSED,-
+2025-12-24 00:03:59,CPASS-001,Change Password - Success (Validation by Redirect),2.96,PASSED,-
+2025-12-24 00:05:25,CPASS-002,Change Password - Mismatch Confirmation (Fail),3.01,PASSED,-
+2025-12-24 00:23:26,CPASS-003,Change Password - Weak Password (Fail),3.03,PASSED,-
+2025-12-24 00:29:52,HIST-001,History Webinar - Navigation via Avatar Dropdown (User),1.42,PASSED,-2025-12-24 00:30:46,HIST-002,History Webinar - Verify UI (User),1.51,PASSED,-
