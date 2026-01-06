@@ -16,7 +16,7 @@ Pengujian dilakukan menggunakan **Python** dan **Selenium WebDriver** untuk memv
 - Keamanan dasar (Security Testing)
 - Antarmuka pengguna (UI/UX Testing)
 
-Aplikasi target dibangun menggunakan **React (Frontend)** dan **Go (Backend)** yang dijalankan secara lokal.
+Aplikasi target dibangun menggunakan **React (Frontend)** dan **Go (Backend)** yang dijalankan secara lokal. 
 
 ---
 
@@ -36,8 +36,8 @@ Aplikasi target dibangun menggunakan **React (Frontend)** dan **Go (Backend)** y
 ### Clone Repository
 
 ```bash
-git clone https://github.com/username-anda/selenium-webinar-test.git
-cd selenium-webinar-test
+git clone https://github.com/MashuNakamura/selenium-python-qa.git
+cd selenium-python-qa
 ```
 
 ### Install Dependencies
@@ -57,14 +57,14 @@ pip install -r requirements.txt
 ### Menjalankan Aplikasi Target
 
 - Jalankan backend & frontend aplikasi webinar
-- Pastikan aplikasi dapat diakses melalui:
+- Pastikan aplikasi dapat diakses melalui: 
 👉 `http://localhost:5173`
 
 ---
 
 ## 🧪 Test Scenarios Coverage
 
-Total terdapat **27 Test Cases** yang mencakup positive, negative, functional, security, dan UI/UX testing.
+Total terdapat **27 Test Cases** yang mencakup positive, negative, functional, security, dan UI/UX testing. 
 
 | Module | Test Case ID | Scenario Description | Type |
 |--------|-------------|---------------------|------|
@@ -98,7 +98,7 @@ Total terdapat **27 Test Cases** yang mencakup positive, negative, functional, s
 
 ## 🏃‍♂️ How to Run Tests
 
-Setiap test case dapat dijalankan secara individual melalui terminal.
+Setiap test case dapat dijalankan secara individual melalui terminal. 
 
 ### Contoh Test Login
 ```bash
@@ -136,7 +136,7 @@ Date, Time, Test Case ID, Scenario, Duration (s), Result, Failure Reason
 - **Success Rate:** ~96%
 
 📌 **Catatan:**  
-Test case `AUTH-FORGOT-001` mengalami **FAILED** akibat timeout/error pada proses request OTP, yang kemungkinan dipengaruhi oleh keterlambatan response backend atau konfigurasi email service.
+Test case `AUTH-FORGOT-001` mengalami **FAILED** akibat timeout/error pada proses request OTP, yang kemungkinan dipengaruhi oleh keterlambatan response backend atau konfigurasi email service. 
 
 ---
 
